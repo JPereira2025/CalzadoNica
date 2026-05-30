@@ -8,43 +8,40 @@
  * Carga y muestra las estadísticas del dashboard
  */
 function loadDashboardStats() {
-    Promise.all([
-        apiCall('stats.php?type=productos'),
-        apiCall('stats.php?type=empleados'),
-        apiCall('stats.php?type=categorias'),
-        apiCall('stats.php?type=estilos'),
-        apiCall('stats.php?type=ventas')
-    ]).then(([prod, emp, cat, est, ventas]) => {
-        $("#stat-productos").text(prod.count || 0);
-        $("#stat-empleados").text(emp.count || 0);
-        $("#stat-categorias").text(cat.count || 0);
-        $("#stat-estilos").text(est.count || 0);
-        try {
-            const count = parseInt(ventas && (ventas.count || ventas.c) || 0, 10);
-            const total = parseFloat(ventas && (ventas.total || ventas.s) || 0);
-            const pairs = parseInt(ventas && ventas.pairs || 0, 10);
-            $("#stat-ventas").text(count || 0);
-            $("#stat-ventas-pares").text(pairs || 0);
-            $("#stat-ingresos").text('C$' + total.toFixed(2).replace(new RegExp('\\B(?=(\\d{3})+(?!\\d))', 'g'), ","));
-        } catch (e) {
-            $("#stat-ventas").text('0');
-            $("#stat-ventas-pares").text('0');
-            $("#stat-ingresos").text('C$0.00');
-        }
-    }).catch(error => {
-        console.error('Error cargando estadísticas:', error);
-        showNotification('No se pudieron cargar las estadísticas.', 'warning');
-    });
+    apiCall('stats.php')
+        .then(stats => {
+            $("#stat-productos").text(stats.productos || 0);
+            $("#stat-empleados").text(stats.empleados || 0);
+            $("#stat-categorias").text(stats.categorias || 0);
+            $("#stat-estilos").text(stats.estilos || 0);
+
+            const ventasCount = stats.ventas || 0;
+            const ventasPares = stats.ventas_pares || 0;
+            const ingresos = Number(stats.ventas_total || 0);
+
+            $("#stat-ventas").text(ventasCount);
+            $("#stat-ventas-pares").text(ventasPares);
+            $("#stat-ingresos").text('C$' + ingresos.toFixed(2).replace(new RegExp('\\B(?=(\\d{3})+(?!\\d))', 'g'), ","));
+        })
+        .catch(error => {
+            console.error('Error cargando estadísticas:', error);
+            showNotification('No se pudieron cargar las estadísticas.', 'warning');
+        });
 }
 
 /**
  * Configura el carrusel de imágenes del dashboard
  */
 function setupCarousel() {
-    let currentSlide = 0;
-    const slides = $('.carousel-slide');
-    const indicators = $('.carousel-indicator');
+    const $page = $('#dashboard-page');
+    if ($page.data('carousel-initialized')) return;
+
+    const slides = $page.find('.carousel-slide');
+    const indicators = $page.find('.carousel-indicator');
     const totalSlides = slides.length;
+    if (totalSlides === 0) return;
+
+    let currentSlide = 0;
 
     function showSlide(index) {
         slides.css('opacity', '0');
@@ -68,12 +65,11 @@ function setupCarousel() {
     // Cambio automático cada 5 segundos
     setInterval(nextSlide, 5000);
 
-    // Botones
-    $('#nextBtn').on('click', nextSlide);
-    $('#prevBtn').on('click', prevSlide);
-
-    // Indicadores
-    indicators.on('click', function() {
+    // Botones e indicadores delegados dentro de la página
+    $page.off('click', '#nextBtn').on('click', '#nextBtn', nextSlide);
+    $page.off('click', '#prevBtn').on('click', '#prevBtn', prevSlide);
+    $page.off('click', '.carousel-indicator').on('click', '.carousel-indicator', function() {
         showSlide($(this).data('slide'));
     });
+    $page.data('carousel-initialized', true);
 }

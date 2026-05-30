@@ -21,7 +21,6 @@ window.idCounters = {
 $(document).ready(function() {
     checkSession();
     setupEventListeners();
-    loadDashboardStats();
     setupCarousel();
 });
 
@@ -45,10 +44,25 @@ function setupEventListeners() {
 
     // Navegación: delegación segura
     $(document).on("click", "a.sidebar-link", handleNavigation);
+    $(document).on("click", "#mobile-menu-toggle", function(e) {
+        e.preventDefault();
+        toggleMobileSidebar();
+    });
+    $(document).on("click", "#mobile-back-button", function(e) {
+        e.preventDefault();
+        navigateTo('dashboard');
+    });
 
     // Modales
     $(document).on("click", ".modal-close", function() {
         $(this).closest('.modal').fadeOut(200);
+    });
+
+    // Cerrar menú móvil al redimensionar a pantallas grandes
+    $(window).on('resize', function() {
+        if (window.innerWidth >= 768) {
+            $("#sidebar").removeClass("sidebar-open");
+        }
     });
 
     // Módulos
@@ -65,34 +79,29 @@ function setupEventListeners() {
     $(document).on('click', '.btn-print', handlePrint);
 
     // Acciones rápidas de administrador en el dashboard
-    $('#btn-quick-add-usuario').on('click', function() {
+    $(document).on('click', '#btn-quick-add-usuario', function() {
         if (ensureAdminAction('crear un usuario')) {
-            navigateTo('usuarios');
-            openUsuarioModal();
+            navigateTo('usuarios', openUsuarioModal);
         }
     });
-    $('#btn-quick-add-codigo').on('click', function() {
+    $(document).on('click', '#btn-quick-add-codigo', function() {
         if (ensureAdminAction('crear un código')) {
-            navigateTo('codigos');
-            openCodigoModal();
+            navigateTo('codigos', openCodigoModal);
         }
     });
-    $('#btn-quick-add-producto').on('click', function() {
+    $(document).on('click', '#btn-quick-add-producto', function() {
         if (ensureAdminAction('crear un producto')) {
-            navigateTo('productos');
-            openProductoModal();
+            navigateTo('productos', openProductoModal);
         }
     });
-    $('#btn-quick-add-estilo').on('click', function() {
+    $(document).on('click', '#btn-quick-add-estilo', function() {
         if (ensureAdminAction('crear un estilo')) {
-            navigateTo('estilos');
-            openEstiloModal();
+            navigateTo('estilos', openEstiloModal);
         }
     });
-    $('#btn-quick-add-categoria').on('click', function() {
+    $(document).on('click', '#btn-quick-add-categoria', function() {
         if (ensureAdminAction('crear una categoría')) {
-            navigateTo('categorias');
-            openCategoriaModal();
+            navigateTo('categorias', openCategoriaModal);
         }
     });
 }
